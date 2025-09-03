@@ -409,7 +409,7 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 							}
 						}
 						// Refresh the settings display
-						this.display();
+						this.displayWithScrollPreservation();
 					});
 			});
 
@@ -484,7 +484,7 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 					this.plugin.settings.hideSpecificPaths = value;
 					await this.plugin.saveSettings();
 					// Refresh to show/hide the text area
-					this.display();
+					this.displayWithScrollPreservation();
 				}));
 
 		if (this.plugin.settings.hideSpecificPaths) {
@@ -509,7 +509,7 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 							.onClick(async () => {
 								this.plugin.settings.hiddenPaths.splice(index, 1);
 								await this.plugin.saveSettings();
-								this.display(); // Refresh the settings
+								this.displayWithScrollPreservation(); // Refresh the settings
 							});
 					});
 			});
@@ -524,7 +524,7 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 						.onClick(async () => {
 							this.plugin.settings.hiddenPaths.push('');
 							await this.plugin.saveSettings();
-							this.display(); // Refresh the settings
+							this.displayWithScrollPreservation(); // Refresh the settings
 						});
 				});
 
@@ -558,7 +558,7 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 					this.plugin.settings.useCustomDetails = value;
 					await this.plugin.saveSettings();
 					// Refresh to show/hide custom text fields
-					this.display();
+					this.displayWithScrollPreservation();
 				}));
 
 		if (this.plugin.settings.useCustomDetails) {
@@ -650,5 +650,23 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 		if (inputEl.parentElement) {
 			observer.observe(inputEl.parentElement, { childList: true, subtree: true });
 		}
+	}
+
+	private displayWithScrollPreservation() {
+		// Find the scrollable container (could be the modal or a parent container)
+		const scrollContainer = this.containerEl.closest('.modal-content, .vertical-tab-content') as HTMLElement || 
+			this.containerEl.parentElement ||
+			document.documentElement;
+		
+		// Save current scroll position
+		const scrollTop = scrollContainer.scrollTop;
+		
+		// Rebuild the display
+		this.display();
+		
+		// Restore scroll position after DOM updates
+		requestAnimationFrame(() => {
+			scrollContainer.scrollTop = scrollTop;
+		});
 	}
 }

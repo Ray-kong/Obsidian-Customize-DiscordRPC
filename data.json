@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "showFileName": true,
   "showVaultName": true,
   "timeMode": "session",
