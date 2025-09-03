@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "showFileName": true,
+  "showVaultName": true,
+  "timeMode": "session",
+  "customDetailsPrefix": "Applying fixes to",
+  "customStatePrefix": "Vault",
+  "useCustomDetails": true,
+  "hideVaultName": false,
+  "hideNoteName": false,
+  "hideSpecificPaths": true,
+  "hiddenPaths": [
+    ""
+  ],
+  "showTimeElapsed": true,
+  "customDetails": "",
+  "customState": ""
+}

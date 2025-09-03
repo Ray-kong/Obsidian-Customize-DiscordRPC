@@ -1,16 +1,71 @@
-# Obsidian Sample Plugin
+# Customize DiscordRPC
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+A customizable Discord Rich Presence plugin for Obsidian that shows your vault name, note name, and time spent working on notes.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- **Rich Presence Display**: Shows your current note and vault in Discord
+- **Customizable Settings**: Toggle file names, vault names, and elapsed time
+- **Custom Prefixes**: Replace default "Editing" and "Vault" text with your own
+- **Status Bar Integration**: Visual indicator of connection status
+- **Secure Configuration**: Uses environment variables to keep your Discord application ID private
+
+## Setup
+
+### 1. Discord Application Setup
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application or use an existing one
+3. Copy your Application ID from the General Information page
+4. In the Rich Presence section, upload your custom images (optional)
+
+### 2. Environment Configuration
+
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` and add your Discord Application ID:
+   ```
+   DISCORD_CLIENT_ID=your_discord_client_id_here
+   ```
+
+3. The `.env` file is automatically ignored by git to keep your secrets safe.
+
+### 3. Installation
+
+1. Clone this repository to your Obsidian plugins folder:
+   ```bash
+   git clone <repository-url> .obsidian/plugins/Obsidian-Customize-DiscordRPC
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Build the plugin:
+   ```bash
+   npm run build
+   ```
+
+4. Enable the plugin in Obsidian settings
+
+## Usage
+
+Once enabled, the plugin will automatically connect to Discord when you start Obsidian (if Discord is running). You can:
+
+- Toggle the connection using the status bar indicator (🟢/🔴)
+- Use the command palette to "Toggle Discord Rich Presence" or "Reconnect Discord Rich Presence"
+- Customize display options in the plugin settings
+
+## Configuration Options
+
+- **Show file name**: Display the currently open file name
+- **Show vault name**: Display your vault name
+- **Show time elapsed**: Show how long you've been working on the current note
+- **Custom prefixes**: Replace default text with your own custom prefixes
 
 ## First time developing plugins?
 
