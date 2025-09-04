@@ -36,9 +36,14 @@ interface DiscordRPCSettings {
 	showFileName: boolean;
 	showVaultName: boolean;
 	timeMode: 'file' | 'session';
-	customDetailsPrefix: string;
-	customStatePrefix: string;
-	useCustomDetails: boolean;
+	// Template system
+	useCustomTemplate: boolean;
+	customDetailsTemplate: string;
+	customStateTemplate: string;
+	// Custom buttons
+	enableCustomButton: boolean;
+	customButtonLabel: string;
+	customButtonUrl: string;
 	// Privacy settings
 	hideVaultName: boolean;
 	hideNoteName: boolean;
@@ -51,9 +56,14 @@ const DEFAULT_SETTINGS: DiscordRPCSettings = {
 	showFileName: true,
 	showVaultName: true,
 	timeMode: 'file',
-	customDetailsPrefix: 'Editing',
-	customStatePrefix: 'Vault',
-	useCustomDetails: false,
+	// Template system
+	useCustomTemplate: false,
+	customDetailsTemplate: '%activity_type%: %active_note_name%',
+	customStateTemplate: 'Vault: %vault_name%',
+	// Custom buttons
+	enableCustomButton: false,
+	customButtonLabel: 'Visit My Website',
+	customButtonUrl: '',
 	// Privacy settings
 	hideVaultName: false,
 	hideNoteName: false,
@@ -105,6 +115,16 @@ export default class ObsidianDiscordRPC extends Plugin {
 			})
 		);
 
+		// Listen for layout changes which include reading/editing mode switches
+		this.registerEvent(
+			this.app.workspace.on('layout-change', () => {
+				// Small delay to ensure the layout has fully changed
+				setTimeout(() => {
+					this.updatePresence();
+				}, 100);
+			})
+		);
+
 		// Add settings tab
 		this.addSettingTab(new DiscordRPCSettingTab(this.app, this));
 
@@ -148,12 +168,41 @@ export default class ObsidianDiscordRPC extends Plugin {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
 		
 		// Migrate old settings format
-		if (data && 'showTimeElapsed' in data) {
-			// If the old setting was false, default to 'file' mode
-			// If it was true, keep the default 'file' mode
-			const oldData = data as DiscordRPCSettings & { showTimeElapsed?: boolean };
-			delete oldData.showTimeElapsed;
-			await this.saveSettings();
+		let needsMigration = false;
+		if (data) {
+			const oldData = data as any;
+			
+			// Remove deprecated showTimeElapsed setting
+			if ('showTimeElapsed' in oldData) {
+				delete oldData.showTimeElapsed;
+				needsMigration = true;
+			}
+			
+			// Remove deprecated custom prefix settings
+			if ('useCustomDetails' in oldData) {
+				delete oldData.useCustomDetails;
+				needsMigration = true;
+			}
+			if ('customDetailsPrefix' in oldData) {
+				delete oldData.customDetailsPrefix;
+				needsMigration = true;
+			}
+			if ('customStatePrefix' in oldData) {
+				delete oldData.customStatePrefix;
+				needsMigration = true;
+			}
+			if ('customDetails' in oldData) {
+				delete oldData.customDetails;
+				needsMigration = true;
+			}
+			if ('customState' in oldData) {
+				delete oldData.customState;
+				needsMigration = true;
+			}
+			
+			if (needsMigration) {
+				await this.saveSettings();
+			}
 		}
 	}
 
@@ -283,10 +332,62 @@ export default class ObsidianDiscordRPC extends Plugin {
 		});
 	}
 
+	private isInReadingMode(): boolean {
+		try {
+			const activeLeaf = this.app.workspace.activeLeaf;
+			if (!activeLeaf) return false;
+			
+			const view = activeLeaf.view;
+			if (!view) return false;
+			
+			// Check if it's a markdown view and in reading mode
+			if (view.getViewType() === 'markdown') {
+				const markdownView = view as any;
+				return markdownView.currentMode?.type === 'preview';
+			}
+			
+			return false;
+		} catch (error) {
+			console.error('Error checking reading mode:', error);
+			return false;
+		}
+	}
+
+	private processTemplate(template: string): string {
+		if (!template) return '';
+
+		let result = template;
+		const isReading = this.isInReadingMode();
+		console.log('Discord RPC: Processing template:', template, 'Reading mode:', isReading);
+
+		// Available placeholders
+		const placeholders = {
+			'%active_note_name%': this.currentFile ? this.currentFile.basename : 'Unknown',
+			'%active_note_path%': this.currentFile ? this.currentFile.path : '',
+			'%vault_name%': this.app.vault.getName(),
+			'%folder_name%': this.currentFile ? this.currentFile.parent?.name || 'Root' : 'Unknown',
+			'%file_extension%': this.currentFile ? this.currentFile.extension : '',
+			'%workspace_name%': this.app.vault.getName(), // Alias for vault_name
+			'%activity_type%': isReading ? 'Reading' : 'Editing',
+		};
+
+		// Replace all placeholders
+		Object.entries(placeholders).forEach(([placeholder, value]) => {
+			result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value);
+		});
+
+		console.log('Discord RPC: Processed template result:', result);
+		return result;
+	}
+
 	updatePresence() {
-		if (!this.connected || !this.rpc) return;
+		if (!this.connected || !this.rpc) {
+			console.log('Discord RPC: Not connected or RPC client not available');
+			return;
+		}
 
 		try {
+			console.log('Discord RPC: Updating presence...');
 			const activity: DiscordActivity = {
 				largeImageKey: 'obsidian',
 				largeImageText: 'Obsidian - A knowledge base',
@@ -304,36 +405,60 @@ export default class ObsidianDiscordRPC extends Plugin {
 
 			// Set details (top line) - only if not hiding file info
 			if (!shouldHideFile) {
-				const detailsPrefix = this.settings.useCustomDetails && this.settings.customDetailsPrefix ? 
-					this.settings.customDetailsPrefix : 'Editing';
-				
-				if (this.currentFile && this.settings.showFileName) {
-					activity.details = `${detailsPrefix}: ${this.currentFile.basename}`;
+				if (this.settings.useCustomTemplate && this.settings.customDetailsTemplate) {
+					activity.details = this.processTemplate(this.settings.customDetailsTemplate);
+					console.log('Discord RPC: Using custom template for details:', activity.details);
 				} else {
-					activity.details = `${detailsPrefix} a note`;
+					// Default fallback when not using templates - detect reading/editing mode
+					const isReading = this.isInReadingMode();
+					const activityType = isReading ? 'Reading' : 'Editing';
+					
+					if (this.currentFile && this.settings.showFileName) {
+						activity.details = `${activityType}: ${this.currentFile.basename}`;
+					} else {
+						activity.details = `${activityType} a note`;
+					}
+					console.log('Discord RPC: Using default details:', activity.details);
 				}
+			} else {
+				console.log('Discord RPC: File info hidden, no details set');
 			}
 
 			// Set state (bottom line) - only if not hiding vault info
 			if (this.settings.showVaultName && !shouldHideVault) {
-				const statePrefix = this.settings.useCustomDetails && this.settings.customStatePrefix ? 
-					this.settings.customStatePrefix : 'Vault';
-				const vaultName = this.app.vault.getName();
-				activity.state = `${statePrefix}: ${vaultName}`;
+				if (this.settings.useCustomTemplate && this.settings.customStateTemplate) {
+					activity.state = this.processTemplate(this.settings.customStateTemplate);
+					console.log('Discord RPC: Using custom template for state:', activity.state);
+				} else {
+					// Default fallback when not using templates
+					const vaultName = this.app.vault.getName();
+					activity.state = `Vault: ${vaultName}`;
+					console.log('Discord RPC: Using default state:', activity.state);
+				}
+			} else {
+				console.log('Discord RPC: Vault info hidden or disabled, no state set');
 			}
 
 			// Add timestamp for elapsed time (always shown)
 			const timeToUse = this.settings.timeMode === 'session' ? this.sessionStartTime : this.startTime;
 			activity.startTimestamp = Math.floor(timeToUse / 1000);
 
-			// Add buttons (optional - you can customize these)
-			activity.buttons = [
-				{
-					label: 'Learn About Obsidian',
-					url: 'https://obsidian.md'
-				}
-			];
+			// Add buttons
+			const buttons: Array<{ label: string; url: string }> = [];
+			
+			// Add custom button if enabled and configured
+			if (this.settings.enableCustomButton && this.settings.customButtonUrl) {
+				buttons.push({
+					label: this.settings.customButtonLabel || 'Visit My Website',
+					url: this.settings.customButtonUrl
+				});
+			}
+			
+			if (buttons.length > 0) {
+				activity.buttons = buttons;
+			}
 
+			console.log('Discord RPC: Setting activity:', activity);
 			this.rpc.setActivity(activity);
 		} catch (error) {
 			console.error('Failed to update Discord presence:', error);
@@ -546,45 +671,136 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 			`;
 		}
 
-		containerEl.createEl('h3', { text: 'Custom Prefixes (Optional)' });
+		containerEl.createEl('h3', { text: 'Custom Text Templates' });
 
-		// Use custom prefixes
+		// Use custom templates
 		new Setting(containerEl)
-			.setName('Use custom prefixes')
-			.setDesc('Replace "Editing" and "Vault" with custom text')
+			.setName('Use custom templates')
+			.setDesc('Create fully customizable presence text with placeholders')
 			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.useCustomDetails)
+				.setValue(this.plugin.settings.useCustomTemplate)
 				.onChange(async (value) => {
-					this.plugin.settings.useCustomDetails = value;
+					this.plugin.settings.useCustomTemplate = value;
 					await this.plugin.saveSettings();
-					// Refresh to show/hide custom text fields
+					// Refresh to show/hide custom template fields
 					this.displayWithScrollPreservation();
 				}));
 
-		if (this.plugin.settings.useCustomDetails) {
-			// Custom details prefix
+		if (this.plugin.settings.useCustomTemplate) {
+			// Custom details template
 			new Setting(containerEl)
-				.setName('Activity prefix')
-				.setDesc('Replace "Editing" with custom text (e.g., "Working on", "Writing")')
+				.setName('Activity text template')
+				.setDesc('Template for the top line of Discord presence')
+				.addTextArea(text => {
+					text.setPlaceholder('Example: %activity_type% %active_note_name% in %folder_name%/')
+						.setValue(this.plugin.settings.customDetailsTemplate)
+						.onChange(async (value) => {
+							this.plugin.settings.customDetailsTemplate = value;
+							await this.plugin.saveSettings();
+						});
+					text.inputEl.rows = 2;
+					text.inputEl.style.width = '100%';
+				});
+
+			// Custom state template  
+			new Setting(containerEl)
+				.setName('Location text template')
+				.setDesc('Template for the bottom line of Discord presence')
+				.addTextArea(text => {
+					text.setPlaceholder('Example: %vault_name% workspace')
+						.setValue(this.plugin.settings.customStateTemplate)
+						.onChange(async (value) => {
+							this.plugin.settings.customStateTemplate = value;
+							await this.plugin.saveSettings();
+						});
+					text.inputEl.rows = 2;
+					text.inputEl.style.width = '100%';
+				});
+
+			// Available placeholders help
+			const placeholderDiv = containerEl.createDiv();
+			placeholderDiv.style.fontSize = '0.85em';
+			placeholderDiv.style.color = 'var(--text-muted)';
+			placeholderDiv.style.marginTop = '10px';
+			placeholderDiv.style.padding = '10px';
+			placeholderDiv.style.backgroundColor = 'var(--background-secondary)';
+			placeholderDiv.style.borderRadius = '4px';
+			placeholderDiv.innerHTML = `
+				<strong>Available Placeholders:</strong><br>
+				• <code>%activity_type%</code> - "Reading" or "Editing" based on current mode<br>
+				• <code>%active_note_name%</code> - Current note name<br>
+				• <code>%active_note_path%</code> - Full path to current note<br>
+				• <code>%vault_name%</code> - Vault name<br>
+				• <code>%folder_name%</code> - Current note's folder<br>
+				• <code>%file_extension%</code> - File extension (md, txt, etc.)<br>
+				• <code>%workspace_name%</code> - Same as vault name<br><br>
+				<strong>Example:</strong> "📝 %activity_type% %active_note_name% in %vault_name%"
+			`;
+		}
+
+		containerEl.createEl('h3', { text: 'Custom Button' });
+
+		// Enable custom button
+		new Setting(containerEl)
+			.setName('Enable custom button')
+			.setDesc('Add a custom button to your Discord profile that others can click')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableCustomButton)
+				.onChange(async (value) => {
+					this.plugin.settings.enableCustomButton = value;
+					await this.plugin.saveSettings();
+					// Refresh to show/hide custom button fields
+					this.displayWithScrollPreservation();
+				}));
+
+		if (this.plugin.settings.enableCustomButton) {
+			// Custom button label
+			new Setting(containerEl)
+				.setName('Button label')
+				.setDesc('Text shown on the button (max 32 characters)')
 				.addText(text => text
-					.setPlaceholder('Editing')
-					.setValue(this.plugin.settings.customDetailsPrefix)
+					.setPlaceholder('Visit My Website')
+					.setValue(this.plugin.settings.customButtonLabel)
 					.onChange(async (value) => {
-						this.plugin.settings.customDetailsPrefix = value;
-						await this.plugin.saveSettings();
+						// Discord has a 32 character limit for button labels
+						if (value.length <= 32) {
+							this.plugin.settings.customButtonLabel = value;
+							await this.plugin.saveSettings();
+						} else {
+							text.setValue(this.plugin.settings.customButtonLabel);
+							new Notice('Button label must be 32 characters or less');
+						}
 					}));
 
-			// Custom state prefix
+			// Custom button URL
 			new Setting(containerEl)
-				.setName('Location prefix')
-				.setDesc('Replace "Vault" with custom text (e.g., "Project", "Workspace")')
+				.setName('Button URL')
+				.setDesc('Website URL that opens when the button is clicked')
 				.addText(text => text
-					.setPlaceholder('Vault')
-					.setValue(this.plugin.settings.customStatePrefix)
+					.setPlaceholder('https://example.com')
+					.setValue(this.plugin.settings.customButtonUrl)
 					.onChange(async (value) => {
-						this.plugin.settings.customStatePrefix = value;
-						await this.plugin.saveSettings();
+						// Basic URL validation
+						if (value === '' || value.startsWith('http://') || value.startsWith('https://')) {
+							this.plugin.settings.customButtonUrl = value;
+							await this.plugin.saveSettings();
+						} else {
+							new Notice('URL must start with http:// or https://');
+						}
 					}));
+
+			// Help text for custom button
+			const buttonHelpDiv = containerEl.createDiv();
+			buttonHelpDiv.style.fontSize = '0.8em';
+			buttonHelpDiv.style.color = 'var(--text-muted)';
+			buttonHelpDiv.style.marginTop = '10px';
+			buttonHelpDiv.style.padding = '8px';
+			buttonHelpDiv.style.backgroundColor = 'var(--background-secondary)';
+			buttonHelpDiv.style.borderRadius = '4px';
+			buttonHelpDiv.innerHTML = `
+				<strong>Note:</strong> The custom button will appear on your Discord profile when enabled.<br>
+				Other Discord users can click this button to visit your website.
+			`;
 		}
 
 		// Help text
@@ -593,11 +809,16 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 		helpDiv.style.padding = '10px';
 		helpDiv.style.backgroundColor = 'var(--background-secondary)';
 		helpDiv.style.borderRadius = '5px';
-		helpDiv.createEl('h4', { text: 'Help' });
-		helpDiv.createEl('p', { text: 'Make sure Discord is running on your computer for the Rich Presence to work.' });
-		helpDiv.createEl('p', { text: 'The presence will update automatically when you switch between notes.' });
-		helpDiv.createEl('p', { text: 'Use privacy settings to hide sensitive vault names, note names, or specific files/folders.' });
-		helpDiv.createEl('p', { text: 'You can also use the command palette to toggle or reconnect the Discord Rich Presence.' });
+		helpDiv.innerHTML = `
+			<h4>Contributing</h4>
+			<p>Found a bug or have a feature request? <a href="https://github.com/Ray-kong/Obsidian-Customize-DiscordRPC/issues">Open an issue</a> on GitHub!</p>
+			<p>Pull requests are welcome! Check out the <a href="https://github.com/Ray-kong/Obsidian-Customize-DiscordRPC">repository</a> to contribute.</p>
+			<p style="margin-top: 10px; text-align: center;">
+				<a href="https://github.com/Ray-kong/Obsidian-Customize-DiscordRPC" style="color: var(--text-accent);">
+					⭐ Star the project on GitHub
+				</a>
+			</p>
+		`;
 	}
 
 	private setupPathSuggestions(inputEl: HTMLInputElement) {
