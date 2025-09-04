@@ -144,19 +144,6 @@ export default class ObsidianDiscordRPC extends Plugin {
 				}
 			}
 		});
-
-		// Add command to reconnect
-		this.addCommand({
-			id: 'reconnect-discord-rpc',
-			name: 'Reconnect Discord Rich Presence',
-			callback: async () => {
-				await this.disconnectDiscord();
-				await this.connectDiscord();
-				if (this.connected) {
-					new Notice('Discord Rich Presence reconnected');
-				}
-			}
-		});
 	}
 
 	onunload() {
@@ -170,7 +157,7 @@ export default class ObsidianDiscordRPC extends Plugin {
 		// Migrate old settings format
 		let needsMigration = false;
 		if (data) {
-			const oldData = data as any;
+			const oldData = data as Record<string, unknown>;
 			
 			// Remove deprecated showTimeElapsed setting
 			if ('showTimeElapsed' in oldData) {
@@ -312,23 +299,13 @@ export default class ObsidianDiscordRPC extends Plugin {
 			// Handle exact path match
 			if (pattern === filePath) return true;
 
-			// Handle wildcard patterns
-			if (pattern.includes('*')) {
-				// Convert glob pattern to regex
-				const regexPattern = pattern
-					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars
-					.replace(/\\\*/g, '.*'); // Convert * to .*
-				const regex = new RegExp(`^${regexPattern}$`);
-				return regex.test(filePath);
-			}
-
 			// Handle folder patterns (ending with /)
 			if (pattern.endsWith('/')) {
 				return filePath.startsWith(pattern);
 			}
 
-			// Handle prefix matching
-			return filePath.includes(pattern);
+			// No other patterns supported
+			return false;
 		});
 	}
 
@@ -342,7 +319,7 @@ export default class ObsidianDiscordRPC extends Plugin {
 			
 			// Check if it's a markdown view and in reading mode
 			if (view.getViewType() === 'markdown') {
-				const markdownView = view as any;
+				const markdownView = view as { currentMode?: { type: string } };
 				return markdownView.currentMode?.type === 'preview';
 			}
 			
@@ -602,7 +579,7 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 		// Hide specific paths
 		new Setting(containerEl)
 			.setName('Hide specific files/folders')
-			.setDesc('Hide notes that match certain paths or patterns')
+			.setDesc('Hide notes that match exact paths or entire folders')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.hideSpecificPaths)
 				.onChange(async (value) => {
@@ -617,9 +594,9 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 			this.plugin.settings.hiddenPaths.forEach((path, index) => {
 				new Setting(containerEl)
 					.setName(`Hidden path ${index + 1}`)
-					.setDesc('File path, folder path, or pattern to hide')
+					.setDesc('Exact file path or folder path to hide')
 					.addText(text => {
-						text.setPlaceholder('e.g., Private/, *.secret, Diary.md')
+						text.setPlaceholder('e.g., Private/, Personal/Diary.md, MyNotes.md')
 							.setValue(path)
 							.onChange(async (value) => {
 								this.plugin.settings.hiddenPaths[index] = value.trim();
@@ -664,9 +641,9 @@ class DiscordRPCSettingTab extends PluginSettingTab {
 			helpDiv.innerHTML = `
 				<strong>Pattern Examples:</strong><br>
 				• <code>Private/</code> - Hide all files in Private folder<br>
-				• <code>*.secret</code> - Hide files ending with .secret<br>
-				• <code>Personal/*</code> - Hide all files starting with Personal/<br>
-				• <code>Diary.md</code> - Hide specific file<br>
+				• <code>Personal/Diary.md</code> - Hide specific file in folder<br>
+				• <code>MyDiary.md</code> - Hide specific file in root<br>
+				• <code>Work/</code> - Hide all files in Work folder<br>
 				<em>Tip: Start typing to see file/folder suggestions</em>
 			`;
 		}

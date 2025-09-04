@@ -1,149 +1,122 @@
-# Customize DiscordRPC
+# Obsidian Customize DiscordRPC
 
-A customizable Discord Rich Presence plugin for Obsidian that shows your vault name, note name, and time spent working on notes.
+A fully customizable Discord Rich Presence plugin for Obsidian that shows your activity, vault name, note name, and time spent working on your notes.
 
-## Features
+![Discord Rich Presence Example](https://via.placeholder.com/400x100/5865F2/ffffff?text=Discord+Rich+Presence)
 
-- **Rich Presence Display**: Shows your current note and vault in Discord
-- **Customizable Settings**: Toggle file names, vault names, and elapsed time
-- **Custom Prefixes**: Replace default "Editing" and "Vault" text with your own
-- **Status Bar Integration**: Visual indicator of connection status
-- **Secure Configuration**: Uses environment variables to keep your Discord application ID private
+## ✨ Features
 
-## Setup
+- **🎯 Rich Presence Display**: Show your current note and vault activity in Discord
+- **⏱️ Time Tracking**: Display time spent on current file or entire session
+- **🎨 Custom Templates**: Create fully customizable presence text with placeholders
+- **🔒 Privacy Controls**: Hide vault names, note names, or specific files/folders
+- **🌐 Custom Button**: Add your website/homepage button to your Discord profile
+- **📖 Reading Mode Detection**: Automatically detects reading vs editing mode
+- **📊 Status Bar Integration**: Visual connection indicator with click-to-toggle
+- **🎛️ Easy Controls**: Toggle connection via status bar or command palette
 
-### 1. Discord Application Setup
+## 🚀 Quick Setup
 
-1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
-2. Create a new application or use an existing one
-3. Copy your Application ID from the General Information page
-4. In the Rich Presence section, upload your custom images (optional)
+1. **Install the plugin** in your Obsidian vault
+2. **Enable it** in Settings → Community plugins
+3. **Make sure Discord is running** on your computer
+4. **Click Connect** in the plugin settings or use the status bar indicator
 
-### 2. Environment Configuration
+That's it! The plugin comes pre-configured and ready to use.
 
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
+## ⚙️ Settings
 
-2. Edit `.env` and add your Discord Application ID:
-   ```
-   DISCORD_CLIENT_ID=your_discord_client_id_here
-   ```
+### Display Options
+- **Show file name**: Display the name of the currently open file
+- **Show vault name**: Display the name of your current vault  
+- **Time tracking mode**: Choose between current file time or entire session time
 
-3. The `.env` file is automatically ignored by git to keep your secrets safe.
+### Privacy Settings
+- **Hide vault name**: Hide your actual vault name from Discord
+- **Hide note name**: Hide specific note names and show generic text
+- **Hide specific files/folders**: Hide notes matching certain paths
+  - Supports exact file paths: `Personal/Diary.md`, `MyNotes.md`
+  - Supports folder patterns: `Private/`, `Confidential/`
 
-### 3. Installation
+### Custom Templates
+Create fully customizable presence text using placeholders:
 
-1. Clone this repository to your Obsidian plugins folder:
-   ```bash
-   git clone <repository-url> .obsidian/plugins/Obsidian-Customize-DiscordRPC
-   ```
+**Available Placeholders:**
+- `%activity_type%` - "Reading" or "Editing" based on current mode
+- `%active_note_name%` - Current note name
+- `%active_note_path%` - Full path to current note
+- `%vault_name%` - Vault name
+- `%folder_name%` - Current note's folder
+- `%file_extension%` - File extension (md, txt, etc.)
+- `%workspace_name%` - Same as vault name
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Build the plugin:
-   ```bash
-   npm run build
-   ```
-
-4. Enable the plugin in Obsidian settings
-
-## Usage
-
-Once enabled, the plugin will automatically connect to Discord when you start Obsidian (if Discord is running). You can:
-
-- Toggle the connection using the status bar indicator (🟢/🔴)
-- Use the command palette to "Toggle Discord Rich Presence" or "Reconnect Discord Rich Presence"
-- Customize display options in the plugin settings
-
-## Configuration Options
-
-- **Show file name**: Display the currently open file name
-- **Show vault name**: Display your vault name
-- **Show time elapsed**: Show how long you've been working on the current note
-- **Custom prefixes**: Replace default text with your own custom prefixes
-
-## First time developing plugins?
-
-Quick starting guide for new plugin devs:
-
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
-
-## Releasing new releases
-
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
-
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
-
-## Adding your plugin to the community plugin list
-
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+**Example Template:**
+```
+📝 %activity_type% %active_note_name% in %vault_name%
 ```
 
-If you have multiple URLs, you can also do:
+### Custom Button
+Add a custom button to your Discord profile that others can click:
+- **Button label**: Text shown on the button (max 32 characters)
+- **Button URL**: Your website, portfolio, or any URL you want to share
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+## 🎮 Usage
 
-## API Documentation
+### Connection Methods
+- **Status Bar**: Click the 🟢/🔴 indicator to connect/disconnect
+- **Command Palette**: Use "Toggle Discord Rich Presence"
+- **Settings**: Use the Connect/Disconnect button in plugin settings
 
-See https://github.com/obsidianmd/obsidian-api
+### What Others See
+When enabled, your Discord status will show:
+- Your current activity (Reading/Editing)
+- Note name (if not hidden)
+- Vault name (if not hidden)  
+- Time elapsed since you started
+- Custom button (if configured)
+
+## 🛠️ Advanced Setup (Optional)
+
+If you want to use your own Discord application with custom images:
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application
+3. Upload custom images in Rich Presence → Art Assets:
+   - Upload any image as the **large image** (will be the main cover image)
+   - Upload any image as the **small image** (will be the small icon)
+   - Note: The image names don't matter, just upload them as cover images
+4. Copy your Application ID
+5. Create a `.env` file in the plugin folder and add:
+   ```
+   DISCORD_CLIENT_ID=your_application_id_here
+   ```
+6. Rebuild the plugin with `npm run build`
+
+## 📋 Requirements
+
+- Obsidian v0.15.0 or higher
+- Discord desktop app (browser version won't work)
+- Discord must be running for Rich Presence to connect
+
+## 🐛 Troubleshooting
+
+**"Failed to connect to Discord"**
+- Ensure Discord desktop app is running (not just browser)
+- Try restarting Discord completely
+- Check Discord Settings → Activity Privacy → Enable "Display current activity as a status message"
+
+**"No activity showing in Discord"**  
+- Verify Discord privacy settings allow activity display
+- Make sure Obsidian isn't blocked in Discord's activity settings
+- Try toggling the connection off and on again
+
+
+## 🤝 Contributing
+
+Found a bug or have a feature request? We'd love your help!
+
+Bug reports, feature enhancements, and PRs are welcome!
+
+## 📝 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
