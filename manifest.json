@@ -1,9 +1,9 @@
 {
-	"id": "Obsidian-Customize-DiscordRPC",
+	"id": "customize-discordrpc",
 	"name": "Customize DiscordRPC",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Customizable Discord Rich Presence for Obsidian - Shows vault name, note name, and time spent",
+	"description": "Customizable Discord Rich Presence - Shows vault name, note name, and time spent",
 	"author": "Ray-kong",
 	"authorUrl": "https://github.com/Ray-kong",
 	"fundingUrl": "",
