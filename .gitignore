@@ -5,7 +5,7 @@
 node_modules/
 
 # Build output
-main.js
+# main.js - NOT ignored for Community Plugins (needed for releases)
 main.js.map
 
 # User settings

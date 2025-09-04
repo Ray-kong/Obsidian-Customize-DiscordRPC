@@ -1,15 +1,15 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-customize-discordrpc",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Customizable Discord Rich Presence for Obsidian - Shows vault name, note name, and time spent",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": ["obsidian", "discord", "rpc", "rich-presence", "productivity"],
+	"author": "Ray-kong",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
