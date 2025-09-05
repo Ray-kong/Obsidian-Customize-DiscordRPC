@@ -16,7 +16,6 @@ export class StatusBarManager {
 			? 'Discord RPC Connected - Click to disconnect' 
 			: 'Discord RPC Disconnected - Click to connect';
 		
-		// Add click handler
 		this.statusBarItem.onclick = async () => {
 			await onToggle();
 		};

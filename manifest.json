@@ -7,5 +7,6 @@
 	"author": "Ray-kong",
 	"authorUrl": "https://github.com/Ray-kong",
 	"fundingUrl": "",
-	"isDesktopOnly": true
+	"isDesktopOnly": true,
+	"css": "styles.css"
 }

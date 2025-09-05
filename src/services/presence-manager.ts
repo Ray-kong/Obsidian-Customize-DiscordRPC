@@ -39,7 +39,6 @@ export class PresenceManager {
 			const view = activeLeaf.view;
 			if (!view) return false;
 			
-			// Check if it's a markdown view and in reading mode
 			if (view.getViewType() === 'markdown') {
 				const markdownView = view as { currentMode?: { type: string } };
 				return markdownView.currentMode?.type === 'preview';
@@ -47,7 +46,6 @@ export class PresenceManager {
 			
 			return false;
 		} catch (error) {
-			console.error('Error checking reading mode:', error);
 			return false;
 		}
 	}
@@ -65,7 +63,6 @@ export class PresenceManager {
 		const shouldHideFile = currentFile && this.privacyManager.shouldHideFile(currentFile.path);
 		const shouldHideVault = this.privacyManager.shouldHideVault();
 
-		// Set details (top line) - only if not hiding file info
 		if (!shouldHideFile) {
 			if (this.settings.useCustomTemplate && this.settings.customDetailsTemplate.trim()) {
 				const context: TemplateContext = {
@@ -74,25 +71,17 @@ export class PresenceManager {
 					isReading
 				};
 				activity.details = this.templateProcessor.processTemplate(this.settings.customDetailsTemplate, context);
-				console.log('Discord RPC: Using custom template for details:', activity.details);
-			} else if (!this.settings.useCustomTemplate) {
-				// Default fallback when not using templates
+			} else if (!this.settings.useCustomTemplate && this.settings.showFileName) {
 				const activityType = isReading ? 'Reading' : 'Editing';
 				
-				if (currentFile && this.settings.showFileName) {
+				if (currentFile) {
 					activity.details = `${activityType}: ${currentFile.basename}`;
 				} else {
 					activity.details = `${activityType} a note`;
 				}
-				console.log('Discord RPC: Using default details:', activity.details);
-			} else {
-				console.log('Discord RPC: Custom template enabled but details template is empty, omitting details');
 			}
-		} else {
-			console.log('Discord RPC: File info hidden, no details set');
 		}
 
-		// Set state (bottom line) - only if not hiding vault info
 		if (this.settings.showVaultName && !shouldHideVault) {
 			if (this.settings.useCustomTemplate && this.settings.customStateTemplate.trim()) {
 				const context: TemplateContext = {
@@ -101,27 +90,17 @@ export class PresenceManager {
 					isReading
 				};
 				activity.state = this.templateProcessor.processTemplate(this.settings.customStateTemplate, context);
-				console.log('Discord RPC: Using custom template for state:', activity.state);
 			} else if (!this.settings.useCustomTemplate) {
-				// Default fallback when not using templates
 				const vaultName = this.vault.getName();
 				activity.state = `Vault: ${vaultName}`;
-				console.log('Discord RPC: Using default state:', activity.state);
-			} else {
-				console.log('Discord RPC: Custom template enabled but state template is empty, omitting state');
 			}
-		} else {
-			console.log('Discord RPC: Vault info hidden or disabled, no state set');
 		}
 
-		// Add timestamp for elapsed time (always shown)
 		const timeToUse = this.settings.timeMode === 'session' ? this.sessionStartTime : this.startTime;
 		activity.startTimestamp = Math.floor(timeToUse / 1000);
 
-		// Add buttons
 		const buttons: Array<{ label: string; url: string }> = [];
 		
-		// Add custom button if enabled and configured
 		if (this.settings.enableCustomButton && this.settings.customButtonUrl) {
 			buttons.push({
 				label: this.settings.customButtonLabel || 'Visit My Website',
@@ -138,7 +117,6 @@ export class PresenceManager {
 
 	async updatePresence(currentFile: TFile | null): Promise<void> {
 		if (!this.discordClient.isConnected()) {
-			console.log('Discord RPC: Not connected');
 			return;
 		}
 

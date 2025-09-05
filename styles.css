@@ -1,0 +1,71 @@
+/* Discord RPC Plugin Styles */
+
+/* Status container styling */
+.discord-rpc-status-container {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 5px;
+}
+
+/* Status text styling */
+.discord-rpc-status-connected {
+    color: var(--text-success);
+}
+
+.discord-rpc-status-disconnected {
+    color: var(--text-error);
+}
+
+/* Help text styling */
+.discord-rpc-help-text {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-top: 10px;
+    padding: 8px;
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+}
+
+/* Template placeholder help text */
+.discord-rpc-placeholder-help {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-top: 10px;
+    padding: 10px;
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+}
+
+/* Template text areas */
+.discord-rpc-template-textarea {
+    width: 100%;
+}
+
+/* Button help text */
+.discord-rpc-button-help {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-top: 10px;
+    padding: 8px;
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+}
+
+/* Main help section */
+.discord-rpc-main-help {
+    margin-top: 30px;
+    padding: 10px;
+    background-color: var(--background-secondary);
+    border-radius: 5px;
+}
+
+/* Star link styling */
+.discord-rpc-star-link {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.discord-rpc-star-button {
+    color: var(--text-accent);
+}

@@ -17,7 +17,6 @@ export default class ObsidianDiscordRPC extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		
-		// Initialize services
 		this.discordClient = new DiscordClient();
 		this.presenceManager = new PresenceManager(
 			this.settings,
@@ -26,18 +25,15 @@ export default class ObsidianDiscordRPC extends Plugin {
 			this.discordClient
 		);
 
-		// Initialize UI components
 		const statusBarItem = this.addStatusBarItem();
 		this.statusBarManager = new StatusBarManager(statusBarItem);
 		this.updateStatusBar();
 
-		// Set up Discord client callbacks
 		this.discordClient.setCallbacks(
 			() => this.onDiscordReady(),
 			() => this.onDiscordDisconnected()
 		);
 
-		// Initialize Discord RPC if enabled
 		if (this.settings.enabled) {
 			await this.connectDiscord();
 		}
@@ -72,10 +68,8 @@ export default class ObsidianDiscordRPC extends Plugin {
 			})
 		);
 
-		// Listen for layout changes which include reading/editing mode switches
 		this.registerEvent(
 			this.app.workspace.on('layout-change', () => {
-				// Small delay to ensure the layout has fully changed
 				setTimeout(() => {
 					this.updatePresence();
 				}, 100);
@@ -84,7 +78,6 @@ export default class ObsidianDiscordRPC extends Plugin {
 	}
 
 	private registerCommands() {
-		// Add command to toggle Discord RPC
 		this.addCommand({
 			id: 'toggle-discord-rpc',
 			name: 'Toggle Discord Rich Presence',
@@ -93,7 +86,6 @@ export default class ObsidianDiscordRPC extends Plugin {
 			}
 		});
 
-		// Add command to reconnect
 		this.addCommand({
 			id: 'reconnect-discord-rpc',
 			name: 'Reconnect Discord Rich Presence',
@@ -133,7 +125,6 @@ export default class ObsidianDiscordRPC extends Plugin {
 		const data = await this.loadData();
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
 		
-		// Migrate old settings format
 		await this.migrateOldSettings(data);
 	}
 
@@ -142,7 +133,6 @@ export default class ObsidianDiscordRPC extends Plugin {
 		if (data) {
 			const oldData = data as Record<string, unknown>;
 			
-			// Remove deprecated settings
 			const deprecatedKeys = [
 				'showTimeElapsed',
 				'useCustomDetails',
@@ -174,13 +164,11 @@ export default class ObsidianDiscordRPC extends Plugin {
 		this.presenceManager.updateSettings(settings);
 		await this.saveSettings();
 		
-		// Handle connection state change
 		if (this.settings.enabled && !this.discordClient.isConnected()) {
 			await this.connectDiscord();
 		} else if (!this.settings.enabled && this.discordClient.isConnected()) {
 			await this.disconnectDiscord();
 		} else if (this.discordClient.isConnected()) {
-			// Update presence with new settings
 			this.updatePresence();
 		}
 	}
