@@ -59,10 +59,9 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 					.setButtonText(this.callbacks.isEnabled() ? 'Disconnect' : 'Connect')
 					.setCta()
 					.onClick(() => {
-						void (async () => {
-							await this.callbacks.onToggleConnection();
-							this.displayWithScrollPreservation();
-						})();
+						this.callbacks.onToggleConnection()
+							.then(() => this.displayWithScrollPreservation())
+							.catch(console.error);
 					});
 			});
 	}
@@ -79,7 +78,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.setValue(this.settings.showFileName)
 				.onChange((value) => {
 					this.settings.showFileName = value;
-					void this.callbacks.onSettingsChange(this.settings);
+					this.callbacks.onSettingsChange(this.settings).catch(console.error);
 				}));
 
 		new Setting(containerEl)
@@ -89,7 +88,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.setValue(this.settings.showVaultName)
 				.onChange((value) => {
 					this.settings.showVaultName = value;
-					void this.callbacks.onSettingsChange(this.settings);
+					this.callbacks.onSettingsChange(this.settings).catch(console.error);
 				}));
 
 		new Setting(containerEl)
@@ -101,7 +100,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.setValue(this.settings.timeMode)
 				.onChange((value: 'file' | 'session') => {
 					this.settings.timeMode = value;
-					void this.callbacks.onSettingsChange(this.settings);
+					this.callbacks.onSettingsChange(this.settings).catch(console.error);
 				}));
 	}
 
@@ -117,7 +116,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.setValue(this.settings.hideVaultName)
 				.onChange((value) => {
 					this.settings.hideVaultName = value;
-					void this.callbacks.onSettingsChange(this.settings);
+					this.callbacks.onSettingsChange(this.settings).catch(console.error);
 				}));
 
 		new Setting(containerEl)
@@ -127,7 +126,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.setValue(this.settings.hideNoteName)
 				.onChange((value) => {
 					this.settings.hideNoteName = value;
-					void this.callbacks.onSettingsChange(this.settings);
+					this.callbacks.onSettingsChange(this.settings).catch(console.error);
 				}));
 
 		new Setting(containerEl)
@@ -137,10 +136,9 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.setValue(this.settings.hideSpecificPaths)
 				.onChange((value) => {
 					this.settings.hideSpecificPaths = value;
-					void (async () => {
-						await this.callbacks.onSettingsChange(this.settings);
-						this.displayWithScrollPreservation();
-					})();
+					this.callbacks.onSettingsChange(this.settings)
+						.then(() => this.displayWithScrollPreservation())
+						.catch(console.error);
 				}));
 
 		if (this.settings.hideSpecificPaths) {
@@ -160,7 +158,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 						.setValue(path)
 						.onChange((value) => {
 							this.settings.hiddenPaths[index] = value.trim();
-							void this.callbacks.onSettingsChange(this.settings);
+							this.callbacks.onSettingsChange(this.settings).catch(console.error);
 						});
 					
 					this.setupPathSuggestions(text.inputEl);
@@ -168,11 +166,10 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.addButton(button => {
 					button.setButtonText('Remove')
 						.onClick(() => {
-							void (async () => {
-								this.settings.hiddenPaths.splice(index, 1);
-								await this.callbacks.onSettingsChange(this.settings);
-								this.displayWithScrollPreservation();
-							})();
+							this.settings.hiddenPaths.splice(index, 1);
+							this.callbacks.onSettingsChange(this.settings)
+								.then(() => this.displayWithScrollPreservation())
+								.catch(console.error);
 						});
 				});
 		});
@@ -184,11 +181,10 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				button.setButtonText('Add path')
 					.setCta()
 					.onClick(() => {
-						void (async () => {
-							this.settings.hiddenPaths.push('');
-							await this.callbacks.onSettingsChange(this.settings);
-							this.displayWithScrollPreservation();
-						})();
+						this.settings.hiddenPaths.push('');
+						this.callbacks.onSettingsChange(this.settings)
+							.then(() => this.displayWithScrollPreservation())
+							.catch(console.error);
 					});
 			});
 
@@ -211,7 +207,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 		helpDiv.createEl('code', { text: 'Work/' });
 		helpDiv.appendText(' - Hide all files in Work folder');
 		helpDiv.createEl('br');
-		helpDiv.createEl('em', { text: 'Tip: Start typing to see file/folder suggestions' });
+		helpDiv.createEl('em', { text: 'Tip: start typing to see file/folder suggestions' });
 	}
 
 	private renderCustomTemplates() {
@@ -226,10 +222,9 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.setValue(this.settings.useCustomTemplate)
 				.onChange((value) => {
 					this.settings.useCustomTemplate = value;
-					void (async () => {
-						await this.callbacks.onSettingsChange(this.settings);
-						this.displayWithScrollPreservation();
-					})();
+					this.callbacks.onSettingsChange(this.settings)
+						.then(() => this.displayWithScrollPreservation())
+						.catch(console.error);
 				}));
 
 		if (this.settings.useCustomTemplate) {
@@ -248,7 +243,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 					.setValue(this.settings.customDetailsTemplate)
 					.onChange((value) => {
 						this.settings.customDetailsTemplate = value;
-						void this.callbacks.onSettingsChange(this.settings);
+						this.callbacks.onSettingsChange(this.settings).catch(console.error);
 					});
 				text.inputEl.rows = 2;
 				text.inputEl.classList.add('discord-rpc-template-textarea');
@@ -262,7 +257,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 					.setValue(this.settings.customStateTemplate)
 					.onChange((value) => {
 						this.settings.customStateTemplate = value;
-						void this.callbacks.onSettingsChange(this.settings);
+						this.callbacks.onSettingsChange(this.settings).catch(console.error);
 					});
 				text.inputEl.rows = 2;
 				text.inputEl.classList.add('discord-rpc-template-textarea');
@@ -306,10 +301,9 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.setValue(this.settings.enableCustomButton)
 				.onChange((value) => {
 					this.settings.enableCustomButton = value;
-					void (async () => {
-						await this.callbacks.onSettingsChange(this.settings);
-						this.displayWithScrollPreservation();
-					})();
+					this.callbacks.onSettingsChange(this.settings)
+						.then(() => this.displayWithScrollPreservation())
+						.catch(console.error);
 				}));
 
 		if (this.settings.enableCustomButton) {
@@ -329,7 +323,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					if (value.length <= 32) {
 						this.settings.customButtonLabel = value;
-						void this.callbacks.onSettingsChange(this.settings);
+						this.callbacks.onSettingsChange(this.settings).catch(console.error);
 					} else {
 						text.setValue(this.settings.customButtonLabel);
 						new Notice('Button label must be 32 characters or less');
@@ -345,7 +339,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					if (value === '' || value.startsWith('http://') || value.startsWith('https://')) {
 						this.settings.customButtonUrl = value;
-						void this.callbacks.onSettingsChange(this.settings);
+						this.callbacks.onSettingsChange(this.settings).catch(console.error);
 					} else {
 						new Notice('URL must start with http:// or https://');
 					}
@@ -375,7 +369,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 		const p2 = helpDiv.createEl('p');
 		p2.appendText('Pull requests are welcome! Check out the ');
 		p2.createEl('a', {
-			text: 'repository',
+			text: 'Repository',
 			href: 'https://github.com/Ray-kong/Obsidian-Customize-DiscordRPC'
 		});
 		p2.appendText(' to contribute.');

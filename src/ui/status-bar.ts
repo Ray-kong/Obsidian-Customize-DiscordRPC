@@ -15,7 +15,7 @@ export class StatusBarManager {
 			: 'Discord RPC disconnected - click to connect';
 
 		this.statusBarItem.onclick = () => {
-			void onToggle();
+			onToggle().catch(console.error);
 		};
 	}
 }

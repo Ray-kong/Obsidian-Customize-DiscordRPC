@@ -30,9 +30,7 @@ export default class ObsidianDiscordRPC extends Plugin {
 		this.updateStatusBar();
 
 		this.discordClient.setCallbacks(
-			() => {
-				void this.onDiscordReady();
-			},
+			() => this.onDiscordReady().catch(console.error),
 			() => this.onDiscordDisconnected()
 		);
 
@@ -46,7 +44,7 @@ export default class ObsidianDiscordRPC extends Plugin {
 	}
 
 	onunload() {
-		void this.discordClient.disconnect();
+		this.discordClient.disconnect().catch(console.error);
 	}
 
 	private registerEventListeners() {
@@ -83,24 +81,22 @@ export default class ObsidianDiscordRPC extends Plugin {
 		this.addCommand({
 			id: 'toggle-discord-rpc',
 			name: 'Toggle Discord rich presence',
-			callback: () => {
-				void this.toggleConnection();
-			}
+			callback: () => this.toggleConnection().catch(console.error)
 		});
 
 		this.addCommand({
 			id: 'reconnect-discord-rpc',
 			name: 'Reconnect Discord rich presence',
-			callback: () => {
-				void (async () => {
-					await this.disconnectDiscord();
-					await this.connectDiscord();
-					if (this.discordClient.isConnected()) {
-						new Notice('Discord rich presence reconnected');
-					}
-				})();
-			}
+			callback: () => this.handleReconnectCommand().catch(console.error)
 		});
+	}
+
+	private async handleReconnectCommand(): Promise<void> {
+		await this.disconnectDiscord();
+		await this.connectDiscord();
+		if (this.discordClient.isConnected()) {
+			new Notice('Discord rich presence reconnected');
+		}
 	}
 
 	private createSettingTab(): DiscordRPCSettingTab {
@@ -221,7 +217,7 @@ export default class ObsidianDiscordRPC extends Plugin {
 	}
 
 	private updatePresence(): void {
-		void this.presenceManager.updatePresence(this.currentFile);
+		this.presenceManager.updatePresence(this.currentFile).catch(console.error);
 	}
 
 	private updateStatusBar() {
