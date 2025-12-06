@@ -47,7 +47,7 @@ export class PresenceManager {
 	private createActivity(currentFile: TFile | null): DiscordActivity {
 		const activity: DiscordActivity = {
 			largeImageKey: 'obsidian',
-			largeImageText: 'Obsidian - A knowledge base',
+			largeImageText: 'Obsidian - a knowledge base',
 			smallImageKey: 'obsidian_small',
 			smallImageText: 'Taking notes',
 			instance: false

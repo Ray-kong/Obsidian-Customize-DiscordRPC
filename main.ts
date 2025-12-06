@@ -46,7 +46,7 @@ export default class ObsidianDiscordRPC extends Plugin {
 	}
 
 	onunload() {
-		this.discordClient.disconnect();
+		void this.discordClient.disconnect();
 	}
 
 	private registerEventListeners() {
