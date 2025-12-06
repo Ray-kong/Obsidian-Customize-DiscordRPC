@@ -1,5 +1,3 @@
-import { Notice } from 'obsidian';
-
 export class StatusBarManager {
 	private statusBarItem: HTMLElement;
 
@@ -13,11 +11,11 @@ export class StatusBarManager {
 		const status = isConnected ? '🟢' : '🔴';
 		this.statusBarItem.setText(status);
 		this.statusBarItem.title = isConnected 
-			? 'Discord RPC Connected - Click to disconnect' 
-			: 'Discord RPC Disconnected - Click to connect';
-		
-		this.statusBarItem.onclick = async () => {
-			await onToggle();
+			? 'Discord RPC connected - click to disconnect' 
+			: 'Discord RPC disconnected - click to connect';
+
+		this.statusBarItem.onclick = () => {
+			void onToggle();
 		};
 	}
 }

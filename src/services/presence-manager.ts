@@ -1,4 +1,4 @@
-import { TFile, Vault, Workspace } from 'obsidian';
+import { MarkdownView, TFile, Vault, Workspace } from 'obsidian';
 
 import { DiscordActivity } from '../types/discord';
 import { DiscordRPCSettings } from '../types/settings';
@@ -33,19 +33,13 @@ export class PresenceManager {
 
 	private isInReadingMode(): boolean {
 		try {
-			const activeLeaf = this.workspace.activeLeaf;
-			if (!activeLeaf) return false;
-			
-			const view = activeLeaf.view;
-			if (!view) return false;
-			
-			if (view.getViewType() === 'markdown') {
-				const markdownView = view as { currentMode?: { type: string } };
-				return markdownView.currentMode?.type === 'preview';
+			const markdownView = this.workspace.getActiveViewOfType(MarkdownView);
+			if (!markdownView) {
+				return false;
 			}
-			
-			return false;
-		} catch (error) {
+
+			return markdownView.getMode() === 'preview';
+		} catch {
 			return false;
 		}
 	}
@@ -103,7 +97,7 @@ export class PresenceManager {
 		
 		if (this.settings.enableCustomButton && this.settings.customButtonUrl) {
 			buttons.push({
-				label: this.settings.customButtonLabel || 'Visit My Website',
+				label: this.settings.customButtonLabel || 'Visit my website',
 				url: this.settings.customButtonUrl
 			});
 		}

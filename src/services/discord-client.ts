@@ -12,8 +12,8 @@ export class DiscordClient {
 	private connected = false;
 	private clientId: string;
 	private updateInterval: NodeJS.Timer | null = null;
-	private onReadyCallback?: () => void;
-	private onDisconnectedCallback?: () => void;
+	private onReadyCallback?: () => void | Promise<void>;
+	private onDisconnectedCallback?: () => void | Promise<void>;
 
 	constructor() {
 		this.clientId = process.env.DISCORD_CLIENT_ID || DEFAULT_CLIENT_ID;
@@ -23,7 +23,7 @@ export class DiscordClient {
 		return this.connected;
 	}
 
-	setCallbacks(onReady?: () => void, onDisconnected?: () => void) {
+	setCallbacks(onReady?: () => void | Promise<void>, onDisconnected?: () => void | Promise<void>) {
 		this.onReadyCallback = onReady;
 		this.onDisconnectedCallback = onDisconnected;
 	}
@@ -39,12 +39,12 @@ export class DiscordClient {
 				
 				this.updateInterval = setInterval(() => {
 					if (this.onReadyCallback) {
-						this.onReadyCallback();
+						void this.onReadyCallback();
 					}
 				}, UPDATE_INTERVAL_MS);
 				
 				if (this.onReadyCallback) {
-					this.onReadyCallback();
+					void this.onReadyCallback();
 				}
 			});
 
@@ -55,13 +55,14 @@ export class DiscordClient {
 					this.updateInterval = null;
 				}
 				if (this.onDisconnectedCallback) {
-					this.onDisconnectedCallback();
+					void this.onDisconnectedCallback();
 				}
 			});
 
 			await this.rpc.login({ clientId: this.clientId });
 			return true;
 		} catch (error) {
+			console.error('Discord RPC connection failed:', error);
 			new Notice('Failed to connect to Discord. Is Discord running?');
 			this.connected = false;
 			return false;
@@ -82,7 +83,7 @@ export class DiscordClient {
 			this.rpc = null;
 			this.connected = false;
 		} catch (error) {
-			// Silently handle errors
+			console.error('Failed to disconnect from Discord RPC:', error);
 		}
 	}
 
@@ -94,7 +95,7 @@ export class DiscordClient {
 		try {
 			await this.rpc.setActivity(activity);
 		} catch (error) {
-			// Silently handle errors
+			console.error('Failed to set Discord activity:', error);
 		}
 	}
 }

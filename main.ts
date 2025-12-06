@@ -30,7 +30,9 @@ export default class ObsidianDiscordRPC extends Plugin {
 		this.updateStatusBar();
 
 		this.discordClient.setCallbacks(
-			() => this.onDiscordReady(),
+			() => {
+				void this.onDiscordReady();
+			},
 			() => this.onDiscordDisconnected()
 		);
 
@@ -80,21 +82,23 @@ export default class ObsidianDiscordRPC extends Plugin {
 	private registerCommands() {
 		this.addCommand({
 			id: 'toggle-discord-rpc',
-			name: 'Toggle Discord Rich Presence',
-			callback: async () => {
-				await this.toggleConnection();
+			name: 'Toggle Discord rich presence',
+			callback: () => {
+				void this.toggleConnection();
 			}
 		});
 
 		this.addCommand({
 			id: 'reconnect-discord-rpc',
-			name: 'Reconnect Discord Rich Presence',
-			callback: async () => {
-				await this.disconnectDiscord();
-				await this.connectDiscord();
-				if (this.discordClient.isConnected()) {
-					new Notice('Discord Rich Presence reconnected');
-				}
+			name: 'Reconnect Discord rich presence',
+			callback: () => {
+				void (async () => {
+					await this.disconnectDiscord();
+					await this.connectDiscord();
+					if (this.discordClient.isConnected()) {
+						new Notice('Discord rich presence reconnected');
+					}
+				})();
 			}
 		});
 	}
@@ -192,11 +196,11 @@ export default class ObsidianDiscordRPC extends Plugin {
 	private async toggleConnection(): Promise<void> {
 		if (this.discordClient.isConnected()) {
 			await this.disconnectDiscord();
-			new Notice('Discord Rich Presence disconnected');
+			new Notice('Discord rich presence disconnected');
 		} else {
 			await this.connectDiscord();
 			if (this.discordClient.isConnected()) {
-				new Notice('Discord Rich Presence connected');
+				new Notice('Discord rich presence connected');
 			}
 		}
 	}
@@ -216,8 +220,8 @@ export default class ObsidianDiscordRPC extends Plugin {
 		}
 	}
 
-	private updatePresence() {
-		this.presenceManager.updatePresence(this.currentFile);
+	private updatePresence(): void {
+		void this.presenceManager.updatePresence(this.currentFile);
 	}
 
 	private updateStatusBar() {

@@ -9,7 +9,7 @@ export const DEFAULT_SETTINGS: DiscordRPCSettings = {
 	customDetailsTemplate: '%activity_type%: %active_note_name%',
 	customStateTemplate: 'Vault: %vault_name%',
 	enableCustomButton: false,
-	customButtonLabel: 'Visit My Website',
+	customButtonLabel: 'Visit my website',
 	customButtonUrl: '',
 	hideVaultName: false,
 	hideNoteName: false,

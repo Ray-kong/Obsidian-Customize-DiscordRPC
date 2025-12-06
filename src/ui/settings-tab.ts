@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, Notice, TFile } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, Notice, TFile } from 'obsidian';
 
 import { DiscordRPCSettings } from '../types/settings';
 
@@ -13,7 +13,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 	private settings: DiscordRPCSettings;
 	private callbacks: SettingsTabCallbacks;
 
-	constructor(app: App, plugin: any, settings: DiscordRPCSettings, callbacks: SettingsTabCallbacks) {
+	constructor(app: App, plugin: Plugin, settings: DiscordRPCSettings, callbacks: SettingsTabCallbacks) {
 		super(app, plugin);
 		this.settings = settings;
 		this.callbacks = callbacks;
@@ -27,7 +27,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Discord Rich Presence Settings' });
+		this.renderHeading('Discord rich presence settings');
 
 		this.renderConnectionSection();
 		this.renderDisplayOptions();
@@ -52,15 +52,17 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 		});
 
 		new Setting(containerEl)
-			.setName('Discord Rich Presence')
-			.setDesc('Enable or disable Discord Rich Presence')
+			.setName('Discord rich presence')
+			.setDesc('Enable or disable Discord rich presence')
 			.addButton(button => {
 				button
 					.setButtonText(this.callbacks.isEnabled() ? 'Disconnect' : 'Connect')
 					.setCta()
-					.onClick(async () => {
-						await this.callbacks.onToggleConnection();
-						this.displayWithScrollPreservation();
+					.onClick(() => {
+						void (async () => {
+							await this.callbacks.onToggleConnection();
+							this.displayWithScrollPreservation();
+						})();
 					});
 			});
 	}
@@ -68,16 +70,16 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 	private renderDisplayOptions() {
 		const { containerEl } = this;
 
-		containerEl.createEl('h3', { text: 'Display Options' });
+		this.renderHeading('Display options');
 
 		new Setting(containerEl)
 			.setName('Show file name')
 			.setDesc('Display the name of the currently open file')
 			.addToggle(toggle => toggle
 				.setValue(this.settings.showFileName)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.settings.showFileName = value;
-					await this.callbacks.onSettingsChange(this.settings);
+					void this.callbacks.onSettingsChange(this.settings);
 				}));
 
 		new Setting(containerEl)
@@ -85,9 +87,9 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 			.setDesc('Display the name of the current vault')
 			.addToggle(toggle => toggle
 				.setValue(this.settings.showVaultName)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.settings.showVaultName = value;
-					await this.callbacks.onSettingsChange(this.settings);
+					void this.callbacks.onSettingsChange(this.settings);
 				}));
 
 		new Setting(containerEl)
@@ -97,25 +99,25 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.addOption('file', 'Current file time')
 				.addOption('session', 'Session time')
 				.setValue(this.settings.timeMode)
-				.onChange(async (value: 'file' | 'session') => {
+				.onChange((value: 'file' | 'session') => {
 					this.settings.timeMode = value;
-					await this.callbacks.onSettingsChange(this.settings);
+					void this.callbacks.onSettingsChange(this.settings);
 				}));
 	}
 
 	private renderPrivacySettings() {
 		const { containerEl } = this;
 
-		containerEl.createEl('h3', { text: 'Privacy Settings' });
+		this.renderHeading('Privacy settings');
 
 		new Setting(containerEl)
 			.setName('Hide vault name')
 			.setDesc('Hide the actual vault name and show generic text instead')
 			.addToggle(toggle => toggle
 				.setValue(this.settings.hideVaultName)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.settings.hideVaultName = value;
-					await this.callbacks.onSettingsChange(this.settings);
+					void this.callbacks.onSettingsChange(this.settings);
 				}));
 
 		new Setting(containerEl)
@@ -123,9 +125,9 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 			.setDesc('Hide specific note names and show generic "a document" instead')
 			.addToggle(toggle => toggle
 				.setValue(this.settings.hideNoteName)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.settings.hideNoteName = value;
-					await this.callbacks.onSettingsChange(this.settings);
+					void this.callbacks.onSettingsChange(this.settings);
 				}));
 
 		new Setting(containerEl)
@@ -133,10 +135,12 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 			.setDesc('Hide notes that match exact paths or entire folders')
 			.addToggle(toggle => toggle
 				.setValue(this.settings.hideSpecificPaths)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.settings.hideSpecificPaths = value;
-					await this.callbacks.onSettingsChange(this.settings);
-					this.displayWithScrollPreservation();
+					void (async () => {
+						await this.callbacks.onSettingsChange(this.settings);
+						this.displayWithScrollPreservation();
+					})();
 				}));
 
 		if (this.settings.hideSpecificPaths) {
@@ -154,19 +158,21 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 				.addText(text => {
 					text.setPlaceholder('e.g., Private/, Personal/Diary.md, MyNotes.md')
 						.setValue(path)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.settings.hiddenPaths[index] = value.trim();
-							await this.callbacks.onSettingsChange(this.settings);
+							void this.callbacks.onSettingsChange(this.settings);
 						});
 					
 					this.setupPathSuggestions(text.inputEl);
 				})
 				.addButton(button => {
 					button.setButtonText('Remove')
-						.onClick(async () => {
-							this.settings.hiddenPaths.splice(index, 1);
-							await this.callbacks.onSettingsChange(this.settings);
-							this.displayWithScrollPreservation();
+						.onClick(() => {
+							void (async () => {
+								this.settings.hiddenPaths.splice(index, 1);
+								await this.callbacks.onSettingsChange(this.settings);
+								this.displayWithScrollPreservation();
+							})();
 						});
 				});
 		});
@@ -177,15 +183,17 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 			.addButton(button => {
 				button.setButtonText('Add path')
 					.setCta()
-					.onClick(async () => {
-						this.settings.hiddenPaths.push('');
-						await this.callbacks.onSettingsChange(this.settings);
-						this.displayWithScrollPreservation();
+					.onClick(() => {
+						void (async () => {
+							this.settings.hiddenPaths.push('');
+							await this.callbacks.onSettingsChange(this.settings);
+							this.displayWithScrollPreservation();
+						})();
 					});
 			});
 
 		const helpDiv = containerEl.createDiv('discord-rpc-help-text');
-		helpDiv.createEl('strong', { text: 'Pattern Examples:' });
+		helpDiv.createEl('strong', { text: 'Pattern examples:' });
 		helpDiv.createEl('br');
 		helpDiv.appendText('• ');
 		helpDiv.createEl('code', { text: 'Private/' });
@@ -209,17 +217,19 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 	private renderCustomTemplates() {
 		const { containerEl } = this;
 
-		containerEl.createEl('h3', { text: 'Custom Text Templates' });
+		this.renderHeading('Custom text templates');
 
 		new Setting(containerEl)
 			.setName('Use custom templates')
 			.setDesc('Create fully customizable presence text with placeholders')
 			.addToggle(toggle => toggle
 				.setValue(this.settings.useCustomTemplate)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.settings.useCustomTemplate = value;
-					await this.callbacks.onSettingsChange(this.settings);
-					this.displayWithScrollPreservation();
+					void (async () => {
+						await this.callbacks.onSettingsChange(this.settings);
+						this.displayWithScrollPreservation();
+					})();
 				}));
 
 		if (this.settings.useCustomTemplate) {
@@ -236,9 +246,9 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 			.addTextArea(text => {
 				text.setPlaceholder('Example: %activity_type% %active_note_name% in %folder_name%/')
 					.setValue(this.settings.customDetailsTemplate)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.settings.customDetailsTemplate = value;
-						await this.callbacks.onSettingsChange(this.settings);
+						void this.callbacks.onSettingsChange(this.settings);
 					});
 				text.inputEl.rows = 2;
 				text.inputEl.classList.add('discord-rpc-template-textarea');
@@ -250,16 +260,16 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 			.addTextArea(text => {
 				text.setPlaceholder('Example: %vault_name% workspace')
 					.setValue(this.settings.customStateTemplate)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.settings.customStateTemplate = value;
-						await this.callbacks.onSettingsChange(this.settings);
+						void this.callbacks.onSettingsChange(this.settings);
 					});
 				text.inputEl.rows = 2;
 				text.inputEl.classList.add('discord-rpc-template-textarea');
 			});
 
 		const placeholderDiv = containerEl.createDiv('discord-rpc-placeholder-help');
-		placeholderDiv.createEl('strong', { text: 'Available Placeholders:' });
+		placeholderDiv.createEl('strong', { text: 'Available placeholders:' });
 		placeholderDiv.createEl('br');
 		
 		const placeholders = [
@@ -287,17 +297,19 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 	private renderCustomButton() {
 		const { containerEl } = this;
 
-		containerEl.createEl('h3', { text: 'Custom Button' });
+		this.renderHeading('Custom button');
 
 		new Setting(containerEl)
 			.setName('Enable custom button')
 			.setDesc('Add a custom button to your Discord profile that others can click')
 			.addToggle(toggle => toggle
 				.setValue(this.settings.enableCustomButton)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					this.settings.enableCustomButton = value;
-					await this.callbacks.onSettingsChange(this.settings);
-					this.displayWithScrollPreservation();
+					void (async () => {
+						await this.callbacks.onSettingsChange(this.settings);
+						this.displayWithScrollPreservation();
+					})();
 				}));
 
 		if (this.settings.enableCustomButton) {
@@ -312,12 +324,12 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 			.setName('Button label')
 			.setDesc('Text shown on the button (max 32 characters)')
 			.addText(text => text
-				.setPlaceholder('Visit My Website')
+				.setPlaceholder('Visit my website')
 				.setValue(this.settings.customButtonLabel)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					if (value.length <= 32) {
 						this.settings.customButtonLabel = value;
-						await this.callbacks.onSettingsChange(this.settings);
+						void this.callbacks.onSettingsChange(this.settings);
 					} else {
 						text.setValue(this.settings.customButtonLabel);
 						new Notice('Button label must be 32 characters or less');
@@ -330,10 +342,10 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 			.addText(text => text
 				.setPlaceholder('https://example.com')
 				.setValue(this.settings.customButtonUrl)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					if (value === '' || value.startsWith('http://') || value.startsWith('https://')) {
 						this.settings.customButtonUrl = value;
-						await this.callbacks.onSettingsChange(this.settings);
+						void this.callbacks.onSettingsChange(this.settings);
 					} else {
 						new Notice('URL must start with http:// or https://');
 					}
@@ -349,8 +361,8 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 	private renderHelpSection() {
 		const { containerEl } = this;
 
+		this.renderHeading('Help and contributing');
 		const helpDiv = containerEl.createDiv('discord-rpc-main-help');
-		helpDiv.createEl('h4', { text: 'Contributing' });
 		
 		const p1 = helpDiv.createEl('p');
 		p1.appendText('Found a bug or have a feature request? ');
@@ -419,6 +431,10 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 		if (inputEl.parentElement) {
 			observer.observe(inputEl.parentElement, { childList: true, subtree: true });
 		}
+	}
+
+	private renderHeading(text: string) {
+		new Setting(this.containerEl).setName(text).setHeading();
 	}
 
 	private displayWithScrollPreservation() {
