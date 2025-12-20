@@ -7,6 +7,10 @@ import { PresenceManager } from './src/services/presence-manager';
 import { StatusBarManager } from './src/ui/status-bar';
 import { DiscordRPCSettingTab, SettingsTabCallbacks } from './src/ui/settings-tab';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export default class ObsidianDiscordRPC extends Plugin {
 	settings: DiscordRPCSettings;
 	private discordClient: DiscordClient;
@@ -122,36 +126,40 @@ export default class ObsidianDiscordRPC extends Plugin {
 	}
 
 	async loadSettings() {
-		const data = await this.loadData();
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+		const data = (await this.loadData()) as unknown;
+		const persisted = isRecord(data) ? (data as Partial<DiscordRPCSettings>) : {};
+
+		this.settings = {
+			...DEFAULT_SETTINGS,
+			...persisted,
+		};
 		
 		await this.migrateOldSettings(data);
 	}
 
 	private async migrateOldSettings(data: unknown) {
-		let needsMigration = false;
-		if (data) {
-			const oldData = data as Record<string, unknown>;
-			
-			const deprecatedKeys = [
-				'showTimeElapsed',
-				'useCustomDetails',
-				'customDetailsPrefix',
-				'customStatePrefix',
-				'customDetails',
-				'customState'
-			];
+		if (!isRecord(data)) return;
 
-			deprecatedKeys.forEach(key => {
-				if (key in oldData) {
-					delete oldData[key];
-					needsMigration = true;
-				}
-			});
-			
-			if (needsMigration) {
-				await this.saveSettings();
+		let needsMigration = false;
+		const deprecatedKeys = [
+			'showTimeElapsed',
+			'useCustomDetails',
+			'customDetailsPrefix',
+			'customStatePrefix',
+			'customDetails',
+			'customState'
+		];
+
+		deprecatedKeys.forEach((key) => {
+			if (key in data) {
+				delete data[key];
+				delete (this.settings as unknown as Record<string, unknown>)[key];
+				needsMigration = true;
 			}
+		});
+
+		if (needsMigration) {
+			await this.saveSettings();
 		}
 	}
 

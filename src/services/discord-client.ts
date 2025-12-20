@@ -1,5 +1,5 @@
 import { Notice } from 'obsidian';
-import * as DiscordRPC from 'discord-rpc';
+import { Client } from 'discord-rpc';
 import * as dotenv from 'dotenv';
 
 import { DiscordRPCClient, DiscordActivity } from '../types/discord';
@@ -11,7 +11,7 @@ export class DiscordClient {
 	private rpc: DiscordRPCClient | null = null;
 	private connected = false;
 	private clientId: string;
-	private updateInterval: NodeJS.Timer | null = null;
+	private updateInterval: NodeJS.Timeout | null = null;
 	private onReadyCallback?: () => void | Promise<void>;
 	private onDisconnectedCallback?: () => void | Promise<void>;
 
@@ -32,7 +32,7 @@ export class DiscordClient {
 		if (this.connected) return true;
 
 		try {
-			this.rpc = new DiscordRPC.Client({ transport: 'ipc' }) as unknown as DiscordRPCClient;
+			this.rpc = new Client({ transport: 'ipc' });
 			
 			this.rpc.on('ready', () => {
 				this.connected = true;
