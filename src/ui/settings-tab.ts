@@ -200,7 +200,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 		helpDiv.appendText(' - Hide specific file in folder');
 		helpDiv.createEl('br');
 		helpDiv.appendText('• ');
-		helpDiv.createEl('code', { text: 'my-diary.md' });
+		helpDiv.createEl('code', { text: 'MyDiary.md' });
 		helpDiv.appendText(' - Hide specific file in root');
 		helpDiv.createEl('br');
 		helpDiv.appendText('• ');
@@ -341,7 +341,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 						this.settings.customButtonUrl = value;
 						this.callbacks.onSettingsChange(this.settings).catch(console.error);
 					} else {
-						new Notice('The link must start with http:// or https://.');
+						new Notice('URL must start with http:// or https://');
 					}
 				}));
 
@@ -376,7 +376,7 @@ export class DiscordRPCSettingTab extends PluginSettingTab {
 		
 		const p3 = helpDiv.createEl('p', { cls: 'discord-rpc-star-link' });
 		p3.createEl('a', {
-			text: 'Star the project on GitHub',
+			text: '⭐ Star the project on GitHub',
 			href: 'https://github.com/Ray-kong/Obsidian-Customize-DiscordRPC',
 			cls: 'discord-rpc-star-button'
 		});
